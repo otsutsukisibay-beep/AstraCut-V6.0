@@ -63,30 +63,27 @@ jobs:
         run: |
           set -e
           sed -i '/^dependencies {/a\    testImplementation("junit:junit:4.13.2")' "$PROJECT/app/build.gradle.kts"
-      - name: Align Java and Kotlin JVM targets
-        shell: bash
-        run: |
-          cat > "$RUNNER_TEMP/jvm-target.gradle" <<'EOF'
-          allprojects {
-              tasks.withType(JavaCompile).configureEach {
-                  sourceCompatibility = "21"
-                  targetCompatibility = "21"
-              }
-              
-          }
-          EOF
+          
 
       - name: Build Debug APK
         shell: bash
         run: |
-          cd "$PROJECT"
-          gradle --init-script "$RUNNER_TEMP/jvm-target.gradle" :app:assembleDebug --stacktrace
+                cd "$PROJECT"
+      cat > "$RUNNER_TEMP/java-target.gradle" <<'EOF'
+      allprojects {
+          tasks.withType(org.gradle.api.tasks.compile.JavaCompile).configureEach {
+              sourceCompatibility = "21"
+              targetCompatibility = "21"
+          }
+      }
+      EOF
+      gradle --init-script "$RUNNER_TEMP/java-target.gradle" :app:assembleDebug --stacktrace
 
       - name: Run Unit Tests
         shell: bash
         run: |
           cd "$PROJECT"
-          gradle --init-script "$RUNNER_TEMP/jvm-target.gradle" :app:testDebugUnitTest --stacktrace
+          gradle --init-script "$RUNNER_TEMP/java-target.gradle" :app:testDebugUnitTest --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
